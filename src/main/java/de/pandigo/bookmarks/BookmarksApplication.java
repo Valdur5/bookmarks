@@ -1,11 +1,24 @@
 package de.pandigo.bookmarks;
 
+import java.io.IOException;
 import java.util.Arrays;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpStatus;
 
 // This class contains @SpringBootApplication, which activate autoconfiguration, component scanning,
 // and also allows bean definitions.
@@ -16,8 +29,47 @@ public class BookmarksApplication {
 		SpringApplication.run(BookmarksApplication.class, args);
 	}
 
+	// CORS
 	@Bean
-	// Populate the database when the program starts.
+	FilterRegistrationBean corsFilter(
+			@Value("${tagit.origin:http://localhost:9000}") final String origin) {
+		return new FilterRegistrationBean(new Filter() {
+			@Override
+			public void doFilter(final ServletRequest req, final ServletResponse res,
+								 final FilterChain chain) throws IOException, ServletException {
+				final HttpServletRequest request = (HttpServletRequest) req;
+				final HttpServletResponse response = (HttpServletResponse) res;
+				final String method = request.getMethod();
+				// this origin value could just as easily have come from a database
+				response.setHeader("Access-Control-Allow-Origin", origin);
+				response.setHeader("Access-Control-Allow-Methods",
+						"POST,GET,OPTIONS,DELETE");
+				response.setHeader("Access-Control-Max-Age", Long.toString(60 * 60));
+				response.setHeader("Access-Control-Allow-Credentials", "true");
+				response.setHeader(
+						"Access-Control-Allow-Headers",
+						"Origin,Accept,X-Requested-With,Content-Type,Access-Control-Request-Method,Access-Control-Request-Headers,Authorization");
+				if ("OPTIONS".equals(method)) {
+					response.setStatus(HttpStatus.OK.value());
+				}
+				else {
+					chain.doFilter(req, res);
+				}
+			}
+
+			@Override
+			public void init(final FilterConfig filterConfig) {
+			}
+
+			@Override
+			public void destroy() {
+			}
+		});
+	}
+
+
+	@Bean
+		// Populate the database when the program starts.
 	CommandLineRunner init(final AccountRepository accountRepository,
 						   final BookmarkRepository bookmarkRepository) {
 		return (evt) -> Arrays.asList(

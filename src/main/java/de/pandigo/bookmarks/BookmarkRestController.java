@@ -1,12 +1,17 @@
 package de.pandigo.bookmarks;
 
+import java.net.URI;
+import java.security.Principal;
+import java.util.Collection;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
-import java.util.Collection;
 
 @RestController
 @RequestMapping("/{userId}/bookmarks")
@@ -17,28 +22,28 @@ class BookmarkRestController {
     private final AccountRepository accountRepository;
 
     @Autowired
-    BookmarkRestController(BookmarkRepository bookmarkRepository,
-                           AccountRepository accountRepository) {
+    BookmarkRestController(final BookmarkRepository bookmarkRepository,
+                           final AccountRepository accountRepository) {
         // Letting spring auto populate the repositories.
         this.bookmarkRepository = bookmarkRepository;
         this.accountRepository = accountRepository;
     }
 
     @RequestMapping(method = RequestMethod.GET)
-    Collection<Bookmark> readBookmarks(@PathVariable String userId) {
-        this.validateUser(userId);
-        return this.bookmarkRepository.findByAccountUsername(userId);
+    Collection<Bookmark> readBookmarks(final Principal principal) {
+        this.validateUser(principal);
+        return this.bookmarkRepository.findByAccountUsername(principal.getName());
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    ResponseEntity<?> add(@PathVariable String userId, @RequestBody Bookmark input) {
-        this.validateUser(userId);
+    ResponseEntity<?> add(final Principal principal, @RequestBody final Bookmark input) {
+        this.validateUser(principal);
 
         return this.accountRepository
-                .findByUsername(userId)
+                .findByUsername(principal.getName())
                 .map(account -> {
                     // Create new bookmark entry.
-                    Bookmark result = bookmarkRepository.save(new Bookmark(account,
+                    Bookmark result = this.bookmarkRepository.save(new Bookmark(account,
                             input.uri, input.description));
 
                     // Create the URI which leads to the newly created entry.
@@ -55,14 +60,17 @@ class BookmarkRestController {
     }
 
     @RequestMapping(method = RequestMethod.GET, value = "/{bookmarkId}")
-    Bookmark readBookmark(@PathVariable String userId, @PathVariable Long bookmarkId) {
-        this.validateUser(userId);
+    Bookmark readBookmark(final Principal principal, @PathVariable final Long bookmarkId) {
+        this.validateUser(principal);
         return this.bookmarkRepository.findOne(bookmarkId);
     }
 
-    private void validateUser(String userId) {
+    private void validateUser(final Principal principal) {
         // Ensures that the user is existing, otherwise throw an runtime exception.
-        this.accountRepository.findByUsername(userId).orElseThrow(
-                () -> new UserNotFoundException(userId));
+        final String userId = principal.getName();
+        this.accountRepository
+                .findByUsername(userId)
+                .orElseThrow(
+                        () -> new UserNotFoundException(userId));
     }
 }
