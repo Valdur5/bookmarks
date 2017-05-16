@@ -50,7 +50,7 @@ import org.springframework.web.context.WebApplicationContext;
 public class BookmarkRestControllerTest {
 
     // We define here the content type of the payload for our POST requests and the content type we get back from
-    // GET requests.
+    // GET requests. A client might decide which parser to invoke based on the Content-Type header in the request message
     private final MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
             MediaType.APPLICATION_JSON.getSubtype(),
             Charset.forName("utf8"));
