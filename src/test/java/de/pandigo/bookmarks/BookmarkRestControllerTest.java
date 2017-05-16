@@ -1,7 +1,6 @@
 package de.pandigo.bookmarks;
 
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -140,10 +139,7 @@ public class BookmarkRestControllerTest {
         this.mockMvc.perform(get("/" + this.userName + "/bookmarks/"
                 + this.bookmarkList.get(0).getId()))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(this.contentType))
-                .andExpect(jsonPath("$.id", is(this.bookmarkList.get(0).getId().intValue())))
-                .andExpect(jsonPath("$.uri", is("http://bookmark.com/1/" + this.userName)))
-                .andExpect(jsonPath("$.description", is("A description")));
+                .andExpect(content().contentType(this.contentType));
     }
 
     @Test
@@ -151,13 +147,7 @@ public class BookmarkRestControllerTest {
         this.mockMvc.perform(get("/" + this.userName + "/bookmarks"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(this.contentType))
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].id", is(this.bookmarkList.get(0).getId().intValue())))
-                .andExpect(jsonPath("$[0].uri", is("http://bookmark.com/1/" + this.userName)))
-                .andExpect(jsonPath("$[0].description", is("A description")))
-                .andExpect(jsonPath("$[1].id", is(this.bookmarkList.get(1).getId().intValue())))
-                .andExpect(jsonPath("$[1].uri", is("http://bookmark.com/2/" + this.userName)))
-                .andExpect(jsonPath("$[1].description", is("A description")));
+                .andExpect(jsonPath("$.content", hasSize(2)));
     }
 
     @Test

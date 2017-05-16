@@ -1,13 +1,9 @@
 package de.pandigo.bookmarks;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-// Define a HTTP status for the exception!
-@ResponseStatus(HttpStatus.NOT_FOUND)
+// Not an HTTP error anymore because the BookmarkControllerAdvice annotation will take care of that error.
 class UserNotFoundException extends RuntimeException {
 
-    public UserNotFoundException(String userId) {
+    public UserNotFoundException(final String userId) {
         super("could not find user '" + userId + "'.");
     }
 }
